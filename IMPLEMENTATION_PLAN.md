@@ -1,6 +1,7 @@
 # Otonom Fund - Implementation Plan
 
-This document outlines the implementation plan for the Otonom Fund project, focusing on creating a simplified version that demonstrates the end-to-end user journey for the Solana Colosseum Breakout Hackathon.
+This document outlines the implementation plan for the Otonom Fund project, focusing on creating a simplified version that demonstrates the end-to-end user journey for the Solana Colosseum Breakout Hackathon. The resulting Minimum Viable Product (MVP) from this plan is deployed and accessible at: **[https://pad.otonom.fund](https://pad.otonom.fund)**.
+(For main project information, litepaper, and pitch deck, please visit **[https://otonom.fund](https://otonom.fund)**).
 
 ## Core User Journey
 
@@ -19,7 +20,7 @@ The core user journey we need to implement is:
 
 We'll implement the project in the following phases, focusing on creating a simplified version first and then adding more details if time permits.
 
-### Phase 1: Basic Frontend Implementation (Week 1, Days 1-3)
+### Phase 1: Basic Frontend Implementation
 
 #### Task 1.1: Set Up Project Structure
 - Initialize Next.js project with TypeScript
@@ -37,7 +38,7 @@ We'll implement the project in the following phases, focusing on creating a simp
 - Create wallet context for state management
 - Implement wallet connection UI components
 
-### Phase 2: Basic Backend and Database Implementation (Week 1, Days 4-5)
+### Phase 2: Basic Backend and Database Implementation
 
 #### Task 2.1: Set Up Supabase Integration
 - Configure Supabase client
@@ -49,7 +50,7 @@ We'll implement the project in the following phases, focusing on creating a simp
 - Implement project listing page
 - Create project details page with investment options
 
-### Phase 3: Basic Blockchain Implementation (Week 2, Days 1-3)
+### Phase 3: Basic Blockchain Implementation
 
 #### Task 3.1: Set Up Solana Development Environment
 - Configure local Solana validator
@@ -66,7 +67,7 @@ We'll implement the project in the following phases, focusing on creating a simp
 - Implement token transfer functionality
 - Connect investment flow to UI
 
-### Phase 4: User Dashboard and Integration (Week 2, Days 4-5)
+### Phase 4: User Dashboard and Integration
 
 #### Task 4.1: Implement User Dashboard
 - Create portfolio overview component
@@ -78,7 +79,7 @@ We'll implement the project in the following phases, focusing on creating a simp
 - Implement data synchronization
 - Create a seamless user experience
 
-### Phase 5: Testing and Polishing (Week 3, Days 1-3)
+### Phase 5: Testing and Polishing
 
 #### Task 5.1: Testing
 - Test all user flows
@@ -90,14 +91,25 @@ We'll implement the project in the following phases, focusing on creating a simp
 - Add animations and transitions
 - Optimize performance
 
-### Phase 6: Documentation and Submission (Week 3, Days 4-5)
+### Phase 6: Community Building & Engagement
 
-#### Task 6.1: Documentation
+#### Task 6.1: Establish Initial Online Presence
+- Set up/Maintain core social media accounts (e.g., Twitter, LinkedIn Company Page, Telegram placeholder).
+- Draft introductory bio and project summaries for social platforms.
+
+#### Task 6.2: Content & Outreach Preparation
+- Draft initial announcement posts/threads about Otonom Fund and its mission.
+- Identify relevant Solana/AI/startup communities for potential future outreach.
+- Prepare a brief outline of a community engagement strategy for post-hackathon development.
+
+### Phase 7: Documentation and Submission
+
+#### Task 7.1: Documentation
 - Create user documentation
 - Write technical documentation
 - Prepare presentation materials
 
-#### Task 6.2: Hackathon Submission
+#### Task 7.2: Hackathon Submission
 - Prepare submission materials
 - Create demo video
 - Submit project
@@ -142,7 +154,7 @@ To create a simplified version that demonstrates the end-to-end user journey, we
    - Multi-chain support
    - Advanced analytics
    - Social features
-   - Governance mechanisms
+   - **Decentralized Autonomous Organization (DAO) Development**: Phased implementation of governance smart contracts, token-based voting systems, and on-chain treasury management to transition Otonom Fund to full community governance.
    - Mobile app
 
 ## Technical Simplifications

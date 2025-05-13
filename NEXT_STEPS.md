@@ -169,6 +169,10 @@ Use this checklist to track your progress:
 - [ ] Create demo video
 - [ ] Submit to hackathon
 
+## Broader Vision
+
+While these steps focus on delivering a functional Minimum Viable Product (MVP) for the hackathon, they are also the foundational building blocks towards the larger vision for Otonom Fund: a fully decentralized, community-governed launchpad. Future iterations will build upon this MVP to progressively introduce DAO structures and enhanced governance capabilities.
+
 ## Resources
 
 - [Next.js Documentation](https://nextjs.org/docs)

@@ -334,14 +334,15 @@ For the MVP (Minimum Viable Product), we can simplify the schema to focus on the
 
 This simplified schema will allow us to demonstrate the end-to-end user journey while keeping the database structure manageable.
 
-## Future Schema Enhancements
+## Future Considerations
 
 For the post-hackathon version, we can enhance the schema to support:
 
-1. **User Profiles**: Add more user information (name, email, profile picture)
-2. **Project Updates**: Track project updates and milestones
-3. **Token Vesting**: Implement token vesting schedules
-4. **Voting**: Add voting mechanisms for governance
-5. **Analytics**: Add tables for tracking analytics data
+1.  **User Profiles**: Add more user information (name, email, profile picture)
+2.  **Project Updates**: Track project updates and milestones
+3.  **Token Vesting**: Implement token vesting schedules
+4.  **Community Features**: Add tables for comments, reviews, and discussions
+5.  **Notifications**: Implement a notification system for users
+6.  **DAO Functionality**: Extend the schema to support Decentralized Autonomous Organization (DAO) operations, such as storing proposals, voting records, and treasury management data, aligning with the platform's long-term governance goals.
 
-By following this database schema, we'll be able to create a simplified version of the Otonom Fund platform that demonstrates the end-to-end user journey for the Solana Colosseum Breakout Hackathon, while also laying the groundwork for future enhancements.
+This schema provides a solid foundation for the Otonom Fund MVP and can be extended to support future features and growth.

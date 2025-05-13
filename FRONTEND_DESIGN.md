@@ -248,3 +248,19 @@ This simplified approach will allow us to demonstrate the end-to-end user journe
 5. Test and refine the user experience
 
 By following this frontend design, we'll be able to create a clean, modern interface that guides users through the investment journey for the Solana Colosseum Breakout Hackathon.
+
+## Future UI/UX Considerations
+
+As the Otonom Fund platform evolves, particularly towards its goal of becoming a Decentralized Autonomous Organization (DAO), the frontend design will need to incorporate new pages and components to support governance functionalities. Considerations for future UI/UX enhancements include:
+
+-   **Governance Dashboard:** A dedicated section within the user dashboard or a new top-level page that allows users to:
+    -   View active governance proposals.
+    -   Review details and discussions related to each proposal.
+    -   See past proposal outcomes and voting history.
+    -   Access key DAO metrics (e.g., total $OFUND staked in governance, treasury status, voter turnout statistics).
+-   **Proposal Submission Interface:** A user-friendly form or guided flow for community members who meet the criteria (e.g., holding a minimum amount of $OFUND) to create and submit new governance proposals.
+-   **Voting Interface:** Clear and intuitive UI elements integrated into proposal detail views to allow eligible users to cast their votes (e.g., 'For', 'Against', 'Abstain' buttons).
+-   **User Profile Enhancements for Governance:** Displaying a user's voting power, past voting activity, and any active delegations within their profile.
+-   **Notifications for Governance Events:** Alerting users to new proposals, voting periods starting or ending, and proposal outcomes.
+
+These additions will be crucial for enabling active community participation in the governance and strategic direction of the Otonom Fund.

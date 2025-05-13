@@ -1,455 +1,89 @@
 # Otonom Fund - Smart Contract Design
 
-This document outlines the smart contract design for the Otonom Fund platform on the Solana blockchain. We'll focus on creating a simplified design for the MVP while ensuring it can be extended for future enhancements.
-
-## Overview
-
-The Otonom Fund platform requires the following smart contract functionality:
-
-1. **$OFUND Token**: An SPL token that serves as the platform's native token
-2. **Tier System**: A system that determines user tiers based on $OFUND holdings
-3. **Investment**: Functionality for users to invest in projects
-4. **Token Distribution**: Mechanism for distributing project tokens to investors
-
-## Simplified Approach for MVP
-
-For the MVP, we'll take a simplified approach to smart contract development:
-
-1. **$OFUND Token**: Create a standard SPL token without complex tokenomics
-2. **Tier System**: Implement tier verification based on token balance checks
-3. **Investment**: Use direct token transfers for investments
-4. **Token Distribution**: Implement immediate token distribution without vesting
-
-This simplified approach will allow us to demonstrate the end-to-end user journey while keeping the smart contract development manageable.
-
-## Smart Contract Components
-
-### 1. $OFUND Token
-
-The $OFUND token will be a standard SPL token with the following properties:
-
-- **Name**: Otonom Fund Token
-- **Symbol**: OFUND
-- **Decimals**: 9 (standard for Solana)
-- **Total Supply**: 100,000,000 tokens
-- **Initial Circulation**: 20,000,000 tokens (20%)
-
-#### Implementation Approach
-
-For the MVP, we'll create the $OFUND token using the Solana CLI:
-
-```bash
-# Create a new keypair for the token mint
-solana-keygen new -o token-keypair.json --no-bip39-passphrase
-
-# Create the SPL token
-spl-token create-token token-keypair.json --decimals 9
-
-# Create a token account
-spl-token create-account <TOKEN_MINT_ADDRESS>
-
-# Mint initial supply
-spl-token mint <TOKEN_MINT_ADDRESS> 100000000000000000 <TOKEN_ACCOUNT_ADDRESS>
-```
-
-For a more advanced implementation, we can use Anchor to create a token program:
-
-```rust
-use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
-
-#[program]
-pub mod otonom_fund {
-    use super::*;
-
-    pub fn initialize_token(ctx: Context<InitializeToken>) -> Result<()> {
-        // Initialize the $OFUND token with a total supply of 100,000,000
-        let total_supply = 100_000_000_000_000_000; // With decimals
-        
-        // Mint initial supply to the authority
-        token::mint_to(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                token::MintTo {
-                    mint: ctx.accounts.mint.to_account_info(),
-                    to: ctx.accounts.token_account.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info(),
-                },
-            ),
-            total_supply,
-        )?;
-        
-        Ok(())
-    }
-}
-
-#[derive(Accounts)]
-pub struct InitializeToken<'info> {
-    #[account(mut)]
-    pub authority: Signer<'info>,
-    
-    #[account(
-        init,
-        payer = authority,
-        mint::decimals = 9,
-        mint::authority = authority,
-    )]
-    pub mint: Account<'info, Mint>,
-    
-    #[account(
-        init,
-        payer = authority,
-        token::mint = mint,
-        token::authority = authority,
-    )]
-    pub token_account: Account<'info, TokenAccount>,
-    
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-    pub rent: Sysvar<'info, Rent>,
-}
-```
-
-### 2. Tier System
-
-The tier system will determine user tiers based on $OFUND holdings:
-
-- **Tier 1**: 1,000 $OFUND (34% allocation)
-- **Tier 2**: 10,000 $OFUND (33% allocation)
-- **Tier 3**: 100,000 $OFUND (33% allocation)
-
-#### Implementation Approach
-
-For the MVP, we'll implement tier verification based on token balance checks in the frontend:
-
-```typescript
-// Check user tier based on $OFUND balance
-const getUserTier = (ofundBalance: number) => {
-  if (ofundBalance >= 100000) {
-    return 3;
-  } else if (ofundBalance >= 10000) {
-    return 2;
-  } else if (ofundBalance >= 1000) {
-    return 1;
-  } else {
-    return 0;
-  }
-};
-```
-
-For a more advanced implementation, we can use an Anchor program to verify tiers:
-
-```rust
-use anchor_lang::prelude::*;
-use anchor_spl::token::{TokenAccount};
-
-#[program]
-pub mod otonom_fund {
-    use super::*;
-
-    pub fn verify_tier(ctx: Context<VerifyTier>) -> Result<u8> {
-        let balance = ctx.accounts.token_account.amount;
-        
-        let tier = if balance >= 100_000_000_000_000 {
-            3
-        } else if balance >= 10_000_000_000_000 {
-            2
-        } else if balance >= 1_000_000_000_000 {
-            1
-        } else {
-            0
-        };
-        
-        Ok(tier)
-    }
-}
-
-#[derive(Accounts)]
-pub struct VerifyTier<'info> {
-    pub user: Signer<'info>,
-    pub token_account: Account<'info, TokenAccount>,
-}
-```
-
-### 3. Investment
-
-The investment functionality will allow users to invest in projects by transferring $OFUND tokens.
-
-#### Implementation Approach
-
-For the MVP, we'll implement investment using direct token transfers:
-
-```typescript
-// Transfer $OFUND tokens from user to project vault
-const investInProject = async (
-  connection: Connection,
-  wallet: WalletContextState,
-  projectVault: PublicKey,
-  amount: number
-) => {
-  const transaction = new Transaction().add(
-    createTransferInstruction(
-      await getAssociatedTokenAddress(OFUND_MINT, wallet.publicKey),
-      projectVault,
-      wallet.publicKey,
-      amount
-    )
-  );
-  
-  return await wallet.sendTransaction(transaction, connection);
-};
-```
-
-For a more advanced implementation, we can use an Anchor program:
-
-```rust
-use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
-
-#[program]
-pub mod otonom_fund {
-    use super::*;
-
-    pub fn invest_in_project(
-        ctx: Context<InvestInProject>,
-        amount: u64,
-    ) -> Result<()> {
-        // Transfer $OFUND tokens from user to project vault
-        token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.user_token_account.to_account_info(),
-                    to: ctx.accounts.project_vault.to_account_info(),
-                    authority: ctx.accounts.user.to_account_info(),
-                },
-            ),
-            amount,
-        )?;
-        
-        Ok(())
-    }
-}
-
-#[derive(Accounts)]
-pub struct InvestInProject<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
-    
-    #[account(mut)]
-    pub user_token_account: Account<'info, TokenAccount>,
-    
-    #[account(mut)]
-    pub project_vault: Account<'info, TokenAccount>,
-    
-    pub token_program: Program<'info, Token>,
-}
-```
-
-### 4. Token Distribution
-
-The token distribution mechanism will distribute project tokens to investors.
-
-#### Implementation Approach
-
-For the MVP, we'll implement token distribution using direct token transfers:
-
-```typescript
-// Transfer project tokens from project vault to user
-const distributeProjectTokens = async (
-  connection: Connection,
-  projectAuthority: Keypair,
-  userTokenAccount: PublicKey,
-  projectTokenMint: PublicKey,
-  amount: number
-) => {
-  const transaction = new Transaction().add(
-    createTransferInstruction(
-      await getAssociatedTokenAddress(projectTokenMint, projectAuthority.publicKey),
-      userTokenAccount,
-      projectAuthority.publicKey,
-      amount
-    )
-  );
-  
-  return await sendAndConfirmTransaction(connection, transaction, [projectAuthority]);
-};
-```
-
-For a more advanced implementation, we can use an Anchor program:
-
-```rust
-use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
-
-#[program]
-pub mod otonom_fund {
-    use super::*;
-
-    pub fn distribute_tokens(
-        ctx: Context<DistributeTokens>,
-        amount: u64,
-    ) -> Result<()> {
-        // Transfer project tokens to user
-        token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.project_token_vault.to_account_info(),
-                    to: ctx.accounts.user_project_token_account.to_account_info(),
-                    authority: ctx.accounts.project_authority.to_account_info(),
-                },
-            ),
-            amount,
-        )?;
-        
-        Ok(())
-    }
-}
-
-#[derive(Accounts)]
-pub struct DistributeTokens<'info> {
-    #[account(mut)]
-    pub project_authority: Signer<'info>,
-    
-    #[account(mut)]
-    pub project_token_vault: Account<'info, TokenAccount>,
-    
-    #[account(mut)]
-    pub user_project_token_account: Account<'info, TokenAccount>,
-    
-    pub token_program: Program<'info, Token>,
-}
-```
-
-## Complete Investment Flow
-
-For the MVP, we'll implement a simplified investment flow that combines the above components:
-
-```typescript
-// Complete investment flow
-const completeInvestment = async (
-  connection: Connection,
-  wallet: WalletContextState,
-  projectVault: PublicKey,
-  projectTokenMint: PublicKey,
-  projectAuthority: Keypair,
-  ofundAmount: number
-) => {
-  // 1. Check user tier
-  const ofundBalance = await getTokenBalance(
-    connection,
-    await getAssociatedTokenAddress(OFUND_MINT, wallet.publicKey)
-  );
-  const userTier = getUserTier(ofundBalance);
-  
-  if (userTier === 0) {
-    throw new Error('Insufficient $OFUND balance for any tier');
-  }
-  
-  // 2. Transfer $OFUND tokens from user to project vault
-  const investTransaction = await investInProject(
-    connection,
-    wallet,
-    projectVault,
-    ofundAmount
-  );
-  
-  // 3. Calculate project tokens to distribute
-  const projectTokenAmount = calculateProjectTokens(ofundAmount);
-  
-  // 4. Create user's project token account if it doesn't exist
-  const userProjectTokenAccount = await getOrCreateAssociatedTokenAccount(
-    connection,
-    wallet.publicKey,
-    projectTokenMint,
-    wallet.publicKey
-  );
-  
-  // 5. Transfer project tokens from project vault to user
-  const distributeTransaction = await distributeProjectTokens(
-    connection,
-    projectAuthority,
-    userProjectTokenAccount.address,
-    projectTokenMint,
-    projectTokenAmount
-  );
-  
-  // 6. Return transaction signatures
-  return {
-    investTransaction,
-    distributeTransaction
-  };
-};
-
-// Helper function to calculate project tokens based on $OFUND amount
-const calculateProjectTokens = (ofundAmount: number) => {
-  // Simplified 1:1 conversion for MVP
-  return ofundAmount;
-};
-```
-
-## Smart Contract Testing
-
-For testing the smart contracts, we'll use the Anchor testing framework:
-
-```typescript
-import * as anchor from '@project-serum/anchor';
-import { Program } from '@project-serum/anchor';
-import { OtonomFund } from '../target/types/otonom_fund';
-import { expect } from 'chai';
-
-describe('otonom-fund', () => {
-  const provider = anchor.AnchorProvider.env();
-  anchor.setProvider(provider);
-
-  const program = anchor.workspace.OtonomFund as Program<OtonomFund>;
-
-  it('Initializes the $OFUND token', async () => {
-    // Test code here
-  });
-
-  it('Verifies user tier based on $OFUND balance', async () => {
-    // Test code here
-  });
-
-  it('Allows users to invest in projects', async () => {
-    // Test code here
-  });
-
-  it('Distributes project tokens to investors', async () => {
-    // Test code here
-  });
-});
-```
-
-## Deployment
-
-For deploying the smart contracts, we'll use the Anchor deployment process:
-
-```bash
-# Build the program
-anchor build
-
-# Deploy to localnet for testing
-anchor deploy
-
-# Deploy to devnet for hackathon
-anchor deploy --provider.cluster devnet
-```
-
-## Future Enhancements
-
-For the post-hackathon version, we can enhance the smart contracts to support:
-
-1. **Token Vesting**: Implement vesting schedules for project tokens
-2. **Governance**: Add DAO-like governance features
-3. **Staking**: Implement staking mechanisms for $OFUND
-4. **Rewards**: Add reward mechanisms for active users
-5. **Multi-chain**: Extend the contracts to support multiple blockchains
-
-## Conclusion
-
-By following this smart contract design, we'll be able to create a simplified version of the Otonom Fund platform that demonstrates the end-to-end user journey for the Solana Colosseum Breakout Hackathon, while also laying the groundwork for future enhancements.
-
-For the MVP, we'll focus on implementing the simplified approach to ensure we can demonstrate the core functionality within the hackathon timeframe. The more advanced implementations can be developed post-hackathon as the platform evolves.
+This document outlines the design and key functionalities of the Otonom Fund's core smart contract, which is built using the Anchor framework on the Solana blockchain. This contract orchestrates crucial on-chain operations such as user registration, tokenomics, investments, and tier management.
+
+**The active smart contract program ID on Solana Devnet is `CWYLQDPfH6eywYGJfrSdX2cVMczm88x3V2Rd4tcgk4jf`.**
+
+The detailed source code for this program can be found in the `otonom-contracts` repository, specifically within the `ofund-token-spg/` directory: [View Source Code](https://github.com/Otonom-Launchpad/otonom-contracts/blob/main/ofund-token-spg/lib.rs) (Note: Link may need to point to the correct branch/main if not yet merged).
+
+## Core On-Chain Functionalities
+
+The Otonom Fund smart contract provides the following key features, executed and verified on the Solana blockchain:
+
+### 1. $OFUND Token Management
+
+The platform revolves around the `$OFUND` token. The smart contract includes functionality to manage aspects of this token:
+
+-   **Mint Authority Setup (`initialize_mint`, `initialize_existing_mint`):** These functions establish a Program Derived Address (PDA) as the minting authority for the `$OFUND` token. This allows the program itself to securely mint tokens under specific conditions (e.g., during user registration).
+-   **$OFUND Token Mint Address:** The primary `$OFUND` token mint address used by the platform is `4pV3umk8pY62ry8FsnMbQfJBYgpWnzWcC67UCMUevXLY` (on Solana Devnet). The frontend application and smart contract instructions are configured to interact with this specific mint.
+
+### 2. User Registration and Initial Token Grant (`register_user`)
+
+When a new user joins the Otonom Fund platform through the frontend, the `register_user` instruction is invoked:
+
+-   **Profile Creation:** A unique `UserProfile` account is created on-chain for the user, storing their public key, tier information, total investment amount, and a history of their investments.
+-   **Initial $OFUND Grant:** Upon successful registration, the user is automatically granted an initial amount of 100,000 $OFUND tokens. This minting operation is performed by the smart contract via a Cross-Program Invocation (CPI) to the SPL Token Program, authorized by the program's PDA mint authority.
+-   **Initial Tier Assignment:** After receiving the initial token grant, the user's tier is calculated on-chain based on this balance and stored in their `UserProfile` (see Tier System below).
+
+### 3. Tier System (On-Chain Logic)
+
+The user's investment tier is a critical aspect of the platform, determining their access and allocation rights. This is managed on-chain:
+
+-   **`UserProfile.tier` Field:** Each user's profile stores their current tier as a `u8` value.
+-   **Tier Calculation (`calculate_tier` internal function):** The tier is determined based on the user's **total $OFUND tokens invested** through the platform, not just their current wallet balance. The thresholds are:
+    -   **Tier 0**: < 1,000 $OFUND invested
+    -   **Tier 1**: >= 1,000 $OFUND invested
+    -   **Tier 2**: >= 10,000 $OFUND invested
+    -   **Tier 3**: >= 100,000 $OFUND invested
+-   **Dynamic Updates:** A user's tier is automatically recalculated and updated within their `UserProfile` by the smart contract during two key operations:
+    1.  Upon registration (after the initial token grant).
+    2.  After each successful investment made via the `invest_in_project` function.
+
+**MVP Context for Tiers:** For the hackathon MVP, the initial 100,000 $OFUND grant effectively places all new users into Tier 3, allowing comprehensive testing of platform features. The implemented logic for recalculating tiers based on `total_invested` demonstrates the system's dynamic capabilities. Future iterations of the platform envision a more sophisticated tiering system, potentially involving dedicated staking contracts, time-locked token commitments, and nuanced reward structures to further incentivize long-term user engagement and align with mature launchpad models.
+
+### 4. Project Investment (`invest_in_project`)
+
+Investing in AI startup projects is a core user action, handled by the `invest_in_project` instruction:
+
+-   **Token Transfer:** The user specifies an amount of $OFUND tokens to invest. The smart contract facilitates the secure transfer of these tokens from the investor's token account to the designated project's vault account via a CPI.
+-   **State Updates (On-Chain):**
+    -   The investor's `UserProfile.total_invested` amount is incremented.
+    -   The project's `Project.total_raised` amount is incremented.
+    -   The investor's tier is recalculated based on their new `total_invested` amount.
+-   **Investment Record:** Details of the investment (project invested in, amount, and timestamp) are recorded on-chain in a vector within the investor's `UserProfile` account, providing a transparent investment history.
+
+### 5. Project Initialization (`initialize_project`)
+
+The smart contract also allows for the on-chain creation and setup of new projects that can receive investments:
+
+-   **Project Account:** A `Project` account is created, storing its name, authority (who can manage it), its token vault public key, and the total amount of funds it has raised.
+
+## Data Structures (Account Schemas)
+
+The smart contract defines several key account structures to store its state on the Solana blockchain:
+
+-   **`MintAuthority`**: Stores details about the PDA acting as the mint authority for the $OFUND token.
+-   **`UserProfile`**: Stores user-specific data including their wallet address, current tier, total amount invested, and a list of their past investments.
+-   **`Project`**: Stores details for each investment project, including its name, authority, vault address, and total funds raised.
+
+These on-chain accounts ensure data integrity, transparency, and allow the frontend to query and display reliable user and project information.
+
+## Security and CPIs
+
+The contract utilizes Program Derived Addresses (PDAs) for managing mint authority, ensuring that token minting operations are strictly controlled by the program logic. Cross-Program Invocations (CPIs) are used to securely interact with the SPL Token Program for operations like minting and transferring tokens, adhering to Solana best practices.
+
+## MVP Scope and Future Architectural Vision
+
+The current smart contract (`CWYLQDPfH6eywYGJfrSdX2cVMczm88x3V2Rd4tcgk4jf`) consolidates essential functionalities to deliver a cohesive MVP for the Solana Breakout Hackathon. It showcases key on-chain mechanics such as PDA-controlled token minting, user profile management, dynamic tier adjustments, and investment processing.
+
+Looking ahead, the Otonom Fund platform is envisioned to evolve into a more extensive and modular smart contract ecosystem. Future architectural enhancements may include:
+
+-   **Dual-Token Stability Model Implementation:**
+    -   Refining the `$OFUND` token's role to focus on governance (interfacing with the Governance Program) and staking (via Tier & Staking Contracts).
+    -   Introducing a new smart contract capability (or set of contracts) to manage an investment stablecoin (`$OSTABLE`), possibly including mechanisms for minting/burning pegged to underlying assets like USDC, and ensuring its secure use in project investment flows.
+-   **Dedicated Tier & Staking Contracts:** Separating the tier qualification logic into its own contract, incorporating advanced features like $OFUND staking, variable lock-up periods, and yield generation for staked tokens.
+-   **Governance Program:** Implementing a DAO structure for community governance, allowing $OFUND holders to vote on key platform parameters and project approvals.
+-   **Project-Specific Vesting Contracts:** Offering standardized, auditable vesting contracts for AI startups to manage the distribution of their tokens to investors over time.
+-   **Escrow and Dispute Resolution Mechanisms:** Adding further layers of security and trust for complex investment scenarios.
+
+This MVP serves as a critical first step, establishing a strong on-chain core that will be expanded upon to realize the full vision of the Otonom Fund launchpad.
